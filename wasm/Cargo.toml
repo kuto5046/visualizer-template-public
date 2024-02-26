@@ -7,6 +7,14 @@ edition = "2021"
 [lib]
 crate-type = ["cdylib"]
 
+[[bin]]
+name = "lib"
+path = "src/lib.rs"
+
+[[bin]]
+name = "util"
+path = "src/util.rs"
+
 [dependencies]
 wasm-bindgen = "0.2.89"
 rand = { version = "=0.7.3", features = ["small_rng"] }
