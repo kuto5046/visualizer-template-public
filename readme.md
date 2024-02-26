@@ -5,3 +5,5 @@
 ```bash
 just run
 ```
+
+vercelを使ってデプロイする
