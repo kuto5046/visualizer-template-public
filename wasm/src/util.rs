@@ -171,37 +171,36 @@ pub fn compute_score_details(input: &Input, out: &[(usize, usize)]) -> (i64, Str
     (score, err, bs)
 }
 
-pub fn txt(x: usize, y: usize, text: &str) -> Text {
+pub fn txt(x: usize, y: usize, height: usize, text: &str) -> Text {
     Text::new()
         .add(TextContent::new(text))
         .set("x", x + BOX_WIDTH / 2)
-        .set("y", y + BOX_HEIGHT / 2)
+        .set("y", y + height / 2)
         .set("fill", "black")
         .set("font-size", 15)
         .set("text-anchor", "middle")
         .set("dominant-baseline", "central")
 }
 
-pub fn rect(x: usize, y: usize, color: &str, opacity: f64) -> Rectangle {
+pub fn rect(x: usize, y: usize, height: usize, color: &str, opacity: f64) -> Rectangle {
     Rectangle::new()
         .set("x", x)
         .set("y", y)
         .set("width", BOX_WIDTH)
-        .set("height", BOX_HEIGHT)
+        .set("height", height)
         .set("fill", "Green")
         .set("fill-opacity", opacity)
         .set("stroke", "black")
 }
 
 
-pub fn cardboard_box(x: usize, y: usize, color: &str, opacity: f64, text: &str) -> Group {
-    Group::new().add(rect(x, y, color, opacity)).add(txt(x, y, text))
+pub fn cardboard_box(x: usize, y: usize, height: usize, color: &str, opacity: f64, text: &str) -> Group {
+    Group::new().add(rect(x, y, height, color, opacity)).add(txt(x, y, height, text))
 }
 
 const SVG_SIZE: usize = 800;
 const MARGIN: isize = 10;
-const BOX_HEIGHT: usize = 20;
-const BOX_WIDTH: usize = 40;
+const BOX_WIDTH : usize = 80;
 
 pub fn color(mut val: f64) -> String {
     assert!(0.0 <= val && val <= 1.0);
@@ -248,16 +247,17 @@ pub fn vis(input: &Input, output: &Output, turn: usize) -> (i64, String, String)
         .set("style", "background-color:#F2F3F5"); // 通常不要
 
     let (score, err, bs) = compute_score_details(input, out);
-
+    let max_h = (2 * input.n / input.m).max(bs.iter().map(|b| b.len()).max().unwrap());
+    let box_height: usize = SVG_SIZE / max_h as usize;
     // mこの山に長方形を割り振る。長方形には番号を振る
     for i in 0..input.m {
         let x: usize = (i as f64 * SVG_SIZE as f64 / input.m as f64) as usize;
         for j in 0..bs[i].len() {
-            let y = (SVG_SIZE - MARGIN as usize) - (j * BOX_HEIGHT) as usize;
+            let y = (SVG_SIZE - MARGIN as usize) - (j * box_height) as usize;
             let box_idx = bs[i][j];
             let color = color(box_idx as f64 / input.n as f64);
             let opacity = box_idx as f64 / input.n as f64;
-            let gr = cardboard_box(x as usize, y as usize, &color, opacity, &format!("{}", box_idx));
+            let gr = cardboard_box(x as usize, y as usize, box_height, &color, opacity, &format!("{}", box_idx));
             doc = doc.add(gr);
         }
     }
