@@ -282,17 +282,44 @@ pub fn compute_score_details(
 }
 
 
-
 const MARGIN: f32 = 10.0;
 const BOX_SIZE: f32 = 50.0;
 const TAKA_COLOR: &str = "Red";
 const AOKI_COLOR: &str = "Blue";
 const CIRCLE_SIZE: f32 = 10.0;
+
 pub fn vis(input: &Input, output: &Output, turn: usize) -> (i64, String, String) {
     let N = BOX_SIZE * input.n as f32;
     let out = &output.out[..turn];
     let (score, err, (arrange, p_taka, p_aoki)) = compute_score_details(input, output.start, &out);
 
+    // arranegの隣接する数字の誤差平均を計算
+    let mut arrange_score_map = mat![0; input.n; input.n];
+    for i in 0..input.n {
+        for j in 0..input.n {
+            // 隣接する4マスを見る
+            for dir in 0..4 {
+                let (di, dj) = DIJ[dir];
+                let i2 = i as i32 + di as i32;
+                let j2 = j as i32 + dj as i32;
+                // 範囲外の場合はスキップ
+                if i2 < 0 || i2 >= input.n as i32 || j2 < 0 || j2 >= input.n as i32 {
+                    continue;
+                }
+                let loss = (arrange[i][j] - arrange[i2 as usize][j2 as usize]).pow(2);
+                arrange_score_map[i][j] += loss;
+            }
+        }
+    }
+    // arrange_scoreを0~1に正規化
+    let max_score = arrange_score_map.iter().map(|v| v.iter().max().unwrap()).max().unwrap();
+    let min_score = arrange_score_map.iter().map(|v| v.iter().min().unwrap()).min().unwrap();
+    let mut arrange_score = mat![0.0; input.n; input.n];
+    for i in 0..input.n {
+        for j in 0..input.n {
+            arrange_score[i][j] = (arrange_score_map[i][j] - min_score) as f64 / (max_score - min_score) as f64;
+        }
+    }
     let mut doc = Document::new()
     .set("ViewBox", (0, 0, (MARGIN * 2.0 + BOX_SIZE * N) as i64, (MARGIN * 2.0 + BOX_SIZE * N) as i64))
     .set("id", "util")
@@ -301,7 +328,8 @@ pub fn vis(input: &Input, output: &Output, turn: usize) -> (i64, String, String)
 
     for i in 0..input.n {
         for j in 0..input.n {
-            let color = "White";
+            let score = arrange_score[i][j];
+            let color = "Green";
             let data = 
                 SvgData::new()
                 // 正方形(相対移動とそこを基準とした線の描画)
@@ -313,7 +341,7 @@ pub fn vis(input: &Input, output: &Output, turn: usize) -> (i64, String, String)
             let path = SvgPath::new()
                 .set("d", data)
                 .set("fill", color)
-                .set("fill-opacity", 0.6)
+                .set("fill-opacity", score)
                 .set("stroke", "black")
                 .set("stroke-opacity", 1)
                 .set("stroke-width", 1);
