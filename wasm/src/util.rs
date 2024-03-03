@@ -283,7 +283,7 @@ pub fn compute_score_details(
 
 
 const MARGIN: f32 = 10.0;
-const BOX_SIZE: f32 = 50.0;
+const BOX_SIZE: f32 = 40.0;
 const TAKA_COLOR: &str = "Red";
 const AOKI_COLOR: &str = "Blue";
 const CIRCLE_SIZE: f32 = 10.0;
@@ -343,7 +343,7 @@ pub fn vis(input: &Input, output: &Output, turn: usize) -> (i64, String, String)
                 .set("fill", color)
                 .set("fill-opacity", score)
                 .set("stroke", "black")
-                .set("stroke-opacity", 1)
+                .set("stroke-opacity", 0.7)
                 .set("stroke-width", 1);
             doc = doc.add(path);
 
@@ -354,6 +354,7 @@ pub fn vis(input: &Input, output: &Output, turn: usize) -> (i64, String, String)
                 .set("y", MARGIN + BOX_SIZE * (i as f32 + 0.5))
                 .set("font-size", "medium")
                 .set("fill", "black")
+                .set("fill-opacity", 0.7)
                 .set("text-anchor", "middle")
                 .set("dominant-baseline", "central")
                 .add(TextContent::new(format!("{}", number)));
