@@ -16,6 +16,8 @@ pub struct Ret {
 #[wasm_bindgen]
 pub fn vis(_input: String, _output: String, turn: usize) -> Ret {
     let input = util::parse_input(&_input);
+    // outputがからの場合は0,0,1,1を返す
+    let _output = if _output.is_empty() { "0 0 1 1" } else { &_output };
     let output = util::parse_output(&input, &_output);
     let (score, err, svg) = match output {
         Ok(output) => util::vis(&input, &output, turn),
