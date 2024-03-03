@@ -1,8 +1,9 @@
 use wasm_bindgen::prelude::*;
+mod util;
 
 #[wasm_bindgen]
 pub fn gen(seed: i32) -> String {
-    "".to_string()
+    util::gen(seed as u64).to_string()
 }
 
 #[wasm_bindgen(getter_with_clone)]
@@ -16,7 +17,7 @@ pub struct Ret {
 pub fn vis(_input: String, _output: String, turn: usize) -> Ret {
     Ret {
         score: 0,
-        err: "".to_string(),
+        err: "これはmastersのvisualizerです".to_string(),
         svg: "".to_string(),
     }
 }
