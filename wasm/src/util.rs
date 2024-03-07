@@ -283,13 +283,41 @@ pub fn compute_score_details(
 
 
 const MARGIN: f32 = 10.0;
-const BOX_SIZE: f32 = 40.0;
+// const BOX_SIZE: f32 = 40.0;
+const MAP_SIZE: f32 = 600.0;
 const TAKA_COLOR: &str = "Red";
 const AOKI_COLOR: &str = "Blue";
-const CIRCLE_SIZE: f32 = 10.0;
+
+// 0 <= val <= 1
+pub fn color(mut val: f64) -> String {
+    val = val.min(1.0);
+    val = val.max(0.0);
+    let (r, g, b) = if val < 0.5 {
+        let x = val * 2.0;
+        (
+            30. * (1.0 - x) + 144. * x,
+            144. * (1.0 - x) + 255. * x,
+            255. * (1.0 - x) + 30. * x,
+        )
+    } else {
+        let x = val * 2.0 - 1.0;
+        (
+            144. * (1.0 - x) + 255. * x,
+            255. * (1.0 - x) + 30. * x,
+            30. * (1.0 - x) + 70. * x,
+        )
+    };
+    format!(
+        "#{:02x}{:02x}{:02x}",
+        r.round() as i32,
+        g.round() as i32,
+        b.round() as i32
+    )
+}
+
 
 pub fn vis(input: &Input, output: &Output, turn: usize) -> (i64, String, String) {
-    let N = BOX_SIZE * input.n as f32;
+    let N = input;
     let out = &output.out[..turn];
     let (score, err, (arrange, p_taka, p_aoki)) = compute_score_details(input, output.start, &out);
 
@@ -321,16 +349,19 @@ pub fn vis(input: &Input, output: &Output, turn: usize) -> (i64, String, String)
         }
     }
     let mut doc = Document::new()
-    .set("ViewBox", (0, 0, (MARGIN * 2.0 + BOX_SIZE * N) as i64, (MARGIN * 2.0 + BOX_SIZE * N) as i64))
+    .set("ViewBox", (0, 0, (MARGIN * 2.0 + MAP_SIZE) as i64, (MARGIN * 2.0 + MAP_SIZE) as i64))
     .set("id", "util")
-    .set("width", (MARGIN * 2.0 + BOX_SIZE * N) as i64)
-    .set("height", (MARGIN * 2.0 + BOX_SIZE * N) as i64);
+    .set("width", (MARGIN * 2.0 + MAP_SIZE) as i64)
+    .set("height", (MARGIN * 2.0 + MAP_SIZE) as i64);
+
+    let BOX_SIZE = MAP_SIZE / input.n as f32;
 
     for i in 0..input.n {
         for j in 0..input.n {
-            let score = arrange_score[i][j];
-            let color = "Green";
-            let data = 
+            // let score = arrange_score[i][j];
+            let score = arrange[i][j] as f64 / (input.n * input.n) as f64;
+            let color = color(score);
+            let data =
                 SvgData::new()
                 // 正方形(相対移動とそこを基準とした線の描画)
                 .move_to((MARGIN + BOX_SIZE * j as f32, MARGIN + BOX_SIZE * i as f32))
@@ -341,9 +372,9 @@ pub fn vis(input: &Input, output: &Output, turn: usize) -> (i64, String, String)
             let path = SvgPath::new()
                 .set("d", data)
                 .set("fill", color)
-                .set("fill-opacity", score)
+                .set("fill-opacity", 0.7)
                 .set("stroke", "black")
-                .set("stroke-opacity", 0.7)
+                .set("stroke-opacity", 0.3)
                 .set("stroke-width", 1);
             doc = doc.add(path);
 
@@ -352,7 +383,7 @@ pub fn vis(input: &Input, output: &Output, turn: usize) -> (i64, String, String)
             let text = SvgText::new()
                 .set("x", MARGIN + BOX_SIZE * (j as f32 + 0.5))
                 .set("y", MARGIN + BOX_SIZE * (i as f32 + 0.5))
-                .set("font-size", "medium")
+                .set("font-size", BOX_SIZE / 3.0)
                 .set("fill", "black")
                 .set("fill-opacity", 0.7)
                 .set("text-anchor", "middle")
@@ -365,7 +396,7 @@ pub fn vis(input: &Input, output: &Output, turn: usize) -> (i64, String, String)
                 let circle = Circle::new()
                     .set("cx", MARGIN + BOX_SIZE * (j as f32 + 0.5))
                     .set("cy", MARGIN + BOX_SIZE * (i as f32 + 0.5))
-                    .set("r", CIRCLE_SIZE)
+                    .set("r", BOX_SIZE / 3.0)
                     .set("fill", TAKA_COLOR)
                     .set("fill-opacity", 0.6)
                     .set("stroke", "black");
@@ -375,7 +406,7 @@ pub fn vis(input: &Input, output: &Output, turn: usize) -> (i64, String, String)
                 let circle = Circle::new()
                     .set("cx", MARGIN + BOX_SIZE * (j as f32 + 0.5))
                     .set("cy", MARGIN + BOX_SIZE * (i as f32 + 0.5))
-                    .set("r", CIRCLE_SIZE)
+                    .set("r", BOX_SIZE / 3.0)
                     .set("fill", AOKI_COLOR)
                     .set("fill-opacity", 0.6)
                     .set("stroke", "black");
@@ -384,7 +415,7 @@ pub fn vis(input: &Input, output: &Output, turn: usize) -> (i64, String, String)
             }
         }
 
-    // 壁を描く    
+    // 壁を描く
     // 一番下の線を引くためにH+1まで描く
     for i in 0..input.n + 1 {
         for j in 0..input.n {
@@ -392,10 +423,10 @@ pub fn vis(input: &Input, output: &Output, turn: usize) -> (i64, String, String)
             // i=0とi=Hの時は無条件で描く(大枠) hはH-1まで
             if !(1 <= i && i < input.n) || input.hs[i - 1][j] == '1' {
                 let (color, width) = ("black", 3);
-                // 
-                let data = 
+                //
+                let data =
                     SvgData::new()
-                    // 
+                    //
                     .move_to((MARGIN + BOX_SIZE * j as f32, MARGIN + BOX_SIZE * i as f32))
                     .line_by((BOX_SIZE * 1.0, 0));
                 let p = SvgPath::new()
@@ -415,7 +446,7 @@ pub fn vis(input: &Input, output: &Output, turn: usize) -> (i64, String, String)
             // 初期位置の場合は描かない
             if !(1 <= j && j < input.n) || input.vs[i][j - 1] == '1' {
                 let (color, width) = ("black", 3);
-                let data = 
+                let data =
                     SvgData::new()
                     .move_to((MARGIN + BOX_SIZE * j as f32, MARGIN + BOX_SIZE * i as f32))
                     .line_by((0, BOX_SIZE * 1.0));
