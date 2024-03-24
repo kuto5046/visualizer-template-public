@@ -9,9 +9,13 @@ crate-type = ["cdylib"]
 
 [dependencies]
 wasm-bindgen = "0.2.89"
-rand = { version = "=0.7.3", features = ["small_rng"] }
-rand_chacha = "=0.2.2"
-rand_distr = "=0.2.2"
+rand = { version = "=0.8.5", features = ["small_rng"] }
+getrandom = { version = "0.2.10", features = ["js"] }
+rand_chacha = "0.3.1"
+rand_core = "0.6.4"
+rand_hc = "0.3.2"
+rand_pcg = "0.3.1"
+rand_distr = "0.4.3"
 itertools = "=0.11.0"
 proconio = { version = "=0.3.6", features = ["derive"] }
 clap = { version = "4.0.22", features = ["derive"] }

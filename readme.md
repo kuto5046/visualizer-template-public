@@ -56,3 +56,7 @@ Rustの関数をJavaScriptから呼び出せるようにwasm化するとビジ�
 
 具体的な実装は、yukicoder-score-contest002ブランチやchokduai-contest-005ブランチを参考にしてください。
 
+
+## リリース
+Vercelにデプロイする。
+https://vercel.com/kuto5046s-projects
