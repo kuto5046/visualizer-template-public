@@ -1,7 +1,7 @@
 use wasm_bindgen::prelude::*;
 mod util;
 
-const PROBLEM_ID: char = 'C';
+const PROBLEM_ID: char = 'A';
 
 #[wasm_bindgen]
 pub fn gen(seed: i32) -> String {
