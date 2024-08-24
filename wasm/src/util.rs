@@ -122,16 +122,19 @@ pub struct Output {
     pub est: Vec<Vec<(i64, i64, f64)>>,
     pub dst: Vec<i64>,
     pub gol: Vec<Vec<bool>>,
+    pub pred_pos: Vec<(i64, i64)>,
 }
 
 pub fn parse_output(_input: &Input, f: &str) -> Result<Output, String> {
     let mut out = Vec::new();
     let mut pos = Vec::new();
+    let mut pred_pos = Vec::new();
     let mut vel = Vec::new();
     let mut est = vec![Vec::new(); 5000];
     let mut dst = vec![-1; 5000];
     let mut gol = vec![vec![false; _input.ps.len()]; 5000];
     let mut turn = 0;
+
     for line in f.lines() {
         if line.starts_with('#') {
             // ビジュアライズ用に追加
@@ -173,6 +176,12 @@ pub fn parse_output(_input: &Input, f: &str) -> Result<Output, String> {
                         gol[t][g] = true;
                     }
                 }
+                // center of particles
+                'c' => {
+                    let x = read(it.next(), -100000..=100000)?;
+                    let y = read(it.next(), -100000..=100000)?;
+                    pred_pos.push((x, y));
+                },
                 _ => return Err(format!("Invalid comment: {}", a)),
             }
             continue;
@@ -196,7 +205,7 @@ pub fn parse_output(_input: &Input, f: &str) -> Result<Output, String> {
     if out.len() > MAX_T {
         return Err(format!("Too many actions: {}", out.len()));
     }
-    Ok(Output { out, pos, vel, dst, gol, est })
+    Ok(Output { out, pos, vel, dst, gol, est, pred_pos })
 }
 
 pub fn gen(seed: u64, problem: char) -> Input {
@@ -542,11 +551,16 @@ pub fn vis(input: &Input, output: &Output, turn: usize) -> (i64, String, String)
 
     // 推定
     for (x, y, w) in output.est[turn].iter() {
-        doc = doc.add(make_circle(to_canvas(*x), to_canvas(*y), 1, "teal", *w));
+        doc = doc.add(make_circle(to_canvas(*x), to_canvas(*y), 1, "teal", *w/2.0));
     }
 
     // ドローン
     doc = doc.add(make_circle(to_canvas(px), to_canvas(py), POINT_RADIUS, "blue", 1.0));
+
+    // ドローンの推定位置
+    if (output.pred_pos).len() > turn {
+        doc = doc.add(make_circle(to_canvas(output.pred_pos[turn].0), to_canvas(output.pred_pos[turn].1), POINT_RADIUS, "teal", 0.8));
+    }
 
     (score, err, doc.to_string())
 }
